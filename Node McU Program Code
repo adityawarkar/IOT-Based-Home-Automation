@@ -1,0 +1,88 @@
+#include <Wire.h> 
+#include <Servo.h> 
+#include <LiquidCrystal_I2C.h> // include the library for the I2C-enabled LCD display 
+#include <Keypad.h> // include the library for the keypad 
+ 
+const int LOCK_PIN = 5; // initialize the lock pin 
+Servo servo; 
+const String CODE = "1234"; 
+ 
+LiquidCrystal_I2C lcd(0x27, 16, 2); // initialize the LCD display with the I2C address and size 
+const byte ROWS = 4; // define the number of rows on the keypad 
+const byte COLS = 4; // define the number of columns on the keypad 
+char keys[ROWS][COLS] = { // define the keypad characters 
+{'1', '2', '3', 'A'}, 
+{'4', '5', '6', 'B'}, 
+{'7', '8', '9', 'C'}, 
+{'*', '0', '#', 'D'} 
+}; 
+byte rowPins[ROWS] = {13, 12, 11, 10}; // initialize the keypad row pins 
+byte colPins[COLS] = {9, 8, 7, 6}; // initialize the keypad column pins 
+Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS); // initialize 
+the keypad 
+char code[16]; 
+int index = 0; 
+ 
+ 
+void setup() { 
+lcd.begin(16,2); 
+Wire.begin(); 
+lcd.init(); // initialize the LCD display 
+lcd.backlight(); // turn on the LCD backlight 
+Servo servo; 
+pinMode(LOCK_PIN, OUTPUT); 
+digitalWrite(LOCK_PIN, HIGH);// set the lock pin as an output 
+// pinMode(BUZZER_PIN, OUTPUT); // set the buzzer pin as an output 
+ 
+} 
+ 
+void loop() { 
+lcd.clear(); // clear the LCD display 
+lcd.setCursor(0, 0); // set the LCD cursor to the first row 
+ 
+ 
+lcd.print("Enter code:"); // print the message on the LCD display 
+String enteredCode = ""; // initialize the entered code 
+while (enteredCode.length() < 4) { // wait until 4 keys are entered 
+char key = keypad.getKey(); // get the pressed key 
+if (key != NO_KEY) { // if a key is pressed 
+enteredCode += key; // add the pressed key to the entered code 
+lcd.setCursor(enteredCode.length(), 1); // set the LCD cursor to the second row 
+lcd.print(key); // print an asterisk on the LCD display 
+code[index] = key; 
+index++; 
+ 
+} 
+} 
+ 
+if (enteredCode == CODE) { 
+lcd.clear(); 
+lcd.print("Correct Code"); 
+ 
+// if the entered code is correct 
+digitalWrite(LOCK_PIN, LOW); 
+lcd.clear(); 
+lcd.print("Door is unlocked"); 
+servo.write(0); 
+// clear the LCD display 
+ 
+ 
+ 
+// print the message on the LCD display 
+delay(5000); // wait for 5 seconds 
+servo.write(80); 
+digitalWrite(LOCK_PIN, HIGH); 
+ 
+lcd.clear(); // clear the LCD display 
+lcd.print("Door Locked"); 
+// print the message on the LCD display 
+} 
+else { // if the entered code is incorrect 
+//digitalWrite(BUZZER_PIN, HIGH); // turn on the buzzer 
+lcd.clear(); // clear the LCD display 
+lcd.print("Incorrect code"); // print the message on the LCD display 
+delay(2000); 
+} 
+ 
+ 
+} 
